@@ -20,6 +20,7 @@ public class Server {
                 client = socket.accept();
 
                 threads.add(new MyThread(client, db));
+                System.out.println(threads.size());
             }
         } catch (IOException e) {
             e.printStackTrace();

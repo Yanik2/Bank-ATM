@@ -16,7 +16,8 @@ public class Client {
         createStreams();
         createReaderForUserInput();
         this.user = new User();
-        runMainMenu();
+        MainMenu mainMenu = new MainMenu();
+        mainMenu.runMenu(user);
         closeApp();
     }
 
@@ -40,16 +41,6 @@ public class Client {
 
     private void createReaderForUserInput() {
         input = new BufferedReader(new InputStreamReader(System.in));
-    }
-
-    private void runMainMenu() {
-        while(true) {
-            MainMenu mainMenu = new MainMenu();
-            mainMenu.showMenu();
-            int choice = mainMenu.getChoiceFromInput();
-            mainMenu.runChoice(choice, user);
-            if(choice == 5) break;
-        }
     }
 
     private void closeApp() {

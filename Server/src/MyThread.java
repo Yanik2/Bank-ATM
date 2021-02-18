@@ -94,7 +94,8 @@ public class MyThread extends Thread{
         String value = db.getValue(id);
         String response = "";
         switch(request) {
-            case "1": response =  value.substring(value.indexOf("#") + 1);
+            case "1":
+                response =  value;
                 break;
             case "2":
                 response = changeBalance(value, amount, false);
