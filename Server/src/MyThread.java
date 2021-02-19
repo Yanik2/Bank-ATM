@@ -28,24 +28,12 @@ public class MyThread extends Thread{
                 Server.removeFromList(this);
                 return;
             }
-            String id = checkLoginAndGetId(request);
-            if (id.equals("-1")) {
+            String checkedRequest = checkLoginAndGetId(request);
+            if (checkedRequest.equals("-1")) {
                 sendResponse("Access denied");
                 continue;
             }
-            String response = makeResponse(id);
-            sendResponse(response);
-            break;
-        }
-
-        while(true) {
-            String request = getRequest();
-            if(request.equals("Error")) {
-                downService();
-                Server.removeFromList(this);
-                return;
-            }
-            String[] reqArr = request.split("#");
+            String[] reqArr = checkedRequest.split("#");
             String response = makeResponse(reqArr[0], reqArr[1], reqArr[2], reqArr[3]);
             if(response.equals("user quits")) {
                 db.updateDatabase();
@@ -66,23 +54,25 @@ public class MyThread extends Thread{
     }
 
     private String checkLoginAndGetId(String request) {
-        if(loginsAndPasswords.containsValue(request))
-            for(String key : loginsAndPasswords.keySet()) {
-                if(loginsAndPasswords.get(key).equals(request))
-                    return key;
-            }
-        return "-1";
-    }
-
-    private String makeResponse(String id) {
-        String response;
-        response = id + "#" + db.getValue(id);
-        return response;
+        if(request.startsWith("login")) {
+            int index = request.indexOf("#");
+            String loginRequest = request.substring(index + 1);
+            if (loginsAndPasswords.containsValue(loginRequest))
+                for (String key : loginsAndPasswords.keySet()) {
+                    if (loginsAndPasswords.get(key).equals(loginRequest))
+                        return key + "#0" + "#null" + "#null";
+                }
+            return "-1";
+        }
+        return request;
     }
 
     private String makeResponse(String id, String request, String amount, String destinationId) {
         String response = "";
         switch(request) {
+            case "0":
+                response = id + "#" + db.getValue(id);
+                break;
             case "1":
                 response =  db.getValue(id);
                 break;

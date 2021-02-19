@@ -36,7 +36,7 @@ public class LoginMenu {
     private boolean tryToLogin() {
 
         try {
-            Client.out.writeUTF(this.login + "#" + this.password);
+            Client.out.writeUTF("login" + "#" + this.login + "#" + this.password);
             Client.out.flush();
             this.response = Client.in.readUTF();
             if(this.response.equals("Access denied"))
