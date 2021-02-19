@@ -6,11 +6,10 @@ public class MyThread extends Thread{
 
     private DataInputStream in;
     private DataOutputStream out;
-    private Socket client;
+    private final Socket client;
     private BufferedReader logsNpass;
-    private BufferedReader database;
     private HashMap<String, String> loginsAndPasswords;
-    private Database db;
+    private final Database db;
 
     public MyThread(Socket client, Database db) {
         this.client = client;
@@ -20,21 +19,10 @@ public class MyThread extends Thread{
         start();
     }
 
-    private void initStreams() {
-        try {
-            in = new DataInputStream(client.getInputStream());
-            out = new DataOutputStream(client.getOutputStream());
-            logsNpass = new BufferedReader(new InputStreamReader(new FileInputStream("database/logsAndPass")));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     @Override
     public void run() {
         while(true) {
-            String request = logIn();
+            String request = getRequest();
             if(request.equals("Error")) {
                 downService();
                 Server.removeFromList(this);
@@ -55,21 +43,23 @@ public class MyThread extends Thread{
             if(request.equals("Error")) {
                 downService();
                 Server.removeFromList(this);
-                break;
+                return;
             }
             String[] reqArr = request.split("#");
             String response = makeResponse(reqArr[0], reqArr[1], reqArr[2], reqArr[3]);
-            if(response.equals("break from loop")) break;
+            if(response.equals("user quits")) {
+                db.updateDatabase();
+                break;
+            }
             sendResponse(response);
         }
     }
 
-    private String logIn() {
+    private String getRequest() {
         String request;
         try {
             request = in.readUTF();
         } catch (IOException e) {
-//            e.printStackTrace();
             request = "Error";
         }
         return request;
@@ -91,23 +81,23 @@ public class MyThread extends Thread{
     }
 
     private String makeResponse(String id, String request, String amount, String destinationId) {
-        String value = db.getValue(id);
         String response = "";
         switch(request) {
             case "1":
-                response =  value;
+                response =  db.getValue(id);
                 break;
             case "2":
-                response = changeBalance(value, amount, false);
-                db.setValue(id, response);
+                response = changeBalance(id, amount, false);
                 break;
             case "3":
-                response = changeBalance(value, amount, true);
-                db.setValue(id, response);
+                response = changeBalance(id, amount, true);
                 break;
             case "4":
-                response = transferMoney(value, amount, destinationId);
-                db.setValue(id, response);
+                if(!db.checkForDestinationId(destinationId)) {
+                    response = "There is no user with that id";
+                    break;
+                }
+                response = transferMoney(id, amount, destinationId);
                 break;
             case "5":
                 response = downService();
@@ -126,6 +116,24 @@ public class MyThread extends Thread{
         }
     }
 
+    private String transferMoney(String sourceAccount, String amount, String destinationId) {
+        changeBalance(destinationId, amount, true);
+        return changeBalance(sourceAccount, amount, false);
+    }
+
+    private String changeBalance(String id, String amount, boolean plus) {
+        String account = db.getValue(id);
+        String funds = account.substring(account.indexOf("#") + 1);
+        int newBalance;
+        if(plus)
+            newBalance = Integer.parseInt(funds) + Integer.parseInt(amount);
+        else
+            newBalance = Integer.parseInt(funds) - Integer.parseInt(amount);
+        String result = account.substring(0, account.indexOf("#")) + "#" + newBalance;
+        db.setValue(id, result);
+        return result;
+    }
+
     private String downService() {
         try {
             if(!client.isClosed()) {
@@ -136,7 +144,17 @@ public class MyThread extends Thread{
         } catch(IOException e) {
             e.printStackTrace();
         }
-        return "break from loop";
+        return "user quits";
+    }
+
+    private void initStreams() {
+        try {
+            in = new DataInputStream(client.getInputStream());
+            out = new DataOutputStream(client.getOutputStream());
+            logsNpass = new BufferedReader(new InputStreamReader(new FileInputStream("database/logsAndPass")));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void initMap() {
@@ -154,33 +172,5 @@ public class MyThread extends Thread{
         } catch(IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private String getRequest() {
-        String request = "";
-        try {
-            request = in.readUTF();
-        } catch (IOException e) {
-            request = "Error";
-        }
-        return request;
-    }
-
-    private String changeBalance(String account, String amount, boolean plus) {
-        String funds = account.substring(account.indexOf("#") + 1);
-        int newBalance;
-        if(plus)
-            newBalance = Integer.valueOf(funds) + Integer.valueOf(amount);
-        else
-            newBalance = Integer.valueOf(funds) - Integer.valueOf(amount);
-        return account.substring(0, account.indexOf("#")) + "#" + newBalance;
-    }
-
-    private String transferMoney(String sourceAccount, String amount, String destinationId) {
-        String destinationAccount = db.getValue(destinationId);
-        String newBalanceForSourceAccount = changeBalance(sourceAccount, amount, false);
-        String newBalanceForDestAccount = changeBalance(destinationAccount, amount, true);
-        db.setValue(destinationId, newBalanceForDestAccount);
-        return newBalanceForSourceAccount;
     }
 }

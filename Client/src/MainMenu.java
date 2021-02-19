@@ -31,10 +31,10 @@ public class MainMenu {
 
     private void getChoiceFromInput() {
 
-        String userInputStr = "";
+        String userInputStr;
         try {
              userInputStr = Client.input.readLine();
-             choice = Integer.valueOf(userInputStr);
+             choice = Integer.parseInt(userInputStr);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NumberFormatException e) {
@@ -42,19 +42,19 @@ public class MainMenu {
         }
     }
 
-    public int runChoice(User user) {
+    public void runChoice(User user) {
         String request = makeRequest(choice, user);
         if(request.equals("Not enough money")) {
             System.out.println(request);
-            return -1;
+            return;
         }
         Client.sendRequest(request);
         if(choice == 5) {
             printGoodBye();
-            return choice;
+            return;
         }
         String response = Client.getResponse();
-        return responseProcess(response, user);
+        responseProcess(response, user);
     }
 
     public String makeRequest(int choice, User user) {
@@ -74,7 +74,7 @@ public class MainMenu {
         System.out.println("Enter amount: ");
         int amount = 0;
         try {
-            amount = Integer.valueOf(Client.input.readLine());
+            amount = Integer.parseInt(Client.input.readLine());
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NumberFormatException e) {
@@ -104,12 +104,15 @@ public class MainMenu {
         }
     }
 
-    private int responseProcess(String response, User user) {
+    private void responseProcess(String response, User user) {
 
         String[] splitRes = response.split("#");
+        if(splitRes.length != 2) {
+            System.out.println(response);
+            return;
+        }
         System.out.println("Your balance: " + splitRes[1]);
-        user.setBalance(Long.valueOf(splitRes[1]));
-        return choice;
+        user.setBalance(Long.parseLong(splitRes[1]));
     }
 
     private void printGoodBye() {

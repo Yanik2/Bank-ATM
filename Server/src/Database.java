@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.HashMap;
 
 public class Database {
-    private HashMap<String, String> map;
+    private final HashMap<String, String> map;
 
     public Database() {
         map = new HashMap<>();
@@ -38,12 +38,18 @@ public class Database {
     }
 
     public synchronized void updateDatabase() {
-        try(DataOutputStream out = new DataOutputStream(new FileOutputStream("database/database"))) {
+        try(FileOutputStream out = new FileOutputStream("database/database")) {
             for(String key : map.keySet()) {
-                out.writeUTF(key + map.get(key));
+                String user = key + "#" + map.get(key) + "\n";
+                byte[] arr = user.getBytes();
+                out.write(arr);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public boolean checkForDestinationId(String id) {
+        return map.containsKey(id);
     }
 }

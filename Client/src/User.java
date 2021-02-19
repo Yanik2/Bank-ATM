@@ -1,10 +1,8 @@
-import java.io.IOException;
-
 public class User {
     private int id;
     private String name;
     private long balance;
-    private LoginMenu logMenu;
+    private final LoginMenu logMenu;
 
 
     public User() {
@@ -19,27 +17,15 @@ public class User {
         this.balance = balance;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public int getId() {
         return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     private void initUser() {
         String userData = logMenu.response;
         String[] arr = userData.split("#");
-        id = Integer.valueOf(arr[0]);
+        id = Integer.parseInt(arr[0]);
         name = arr[1];
-        balance = Integer.valueOf(arr[2]);
+        balance = Integer.parseInt(arr[2]);
     }
 }

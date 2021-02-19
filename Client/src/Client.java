@@ -1,11 +1,10 @@
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
 
 public class Client {
     public User user;
-    private static String host = "localhost";
-    private static int port = 4000;
+    private final static String HOST = "localhost";
+    private final static int PORT = 4000;
     private Socket socket;
     public static DataInputStream in;
     public static DataOutputStream out;
@@ -23,7 +22,7 @@ public class Client {
 
     private void createSocket() {
         try {
-            this.socket = new Socket(host, port);
+            this.socket = new Socket(HOST, PORT);
         } catch (IOException e) {
             System.out.println("Server doesn't work");
             System.exit(0);
@@ -69,7 +68,7 @@ public class Client {
         try {
             response = Client.in.readUTF();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Server is not available now");
         }
         return response;
     }
