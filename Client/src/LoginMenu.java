@@ -39,8 +39,10 @@ public class LoginMenu {
             Client.out.writeUTF("login" + "#" + this.login + "#" + this.password);
             Client.out.flush();
             this.response = Client.in.readUTF();
-            if(this.response.equals("Access denied"))
+            if(this.response.equals("Access denied")) {
+                System.out.println("Please, try again");
                 return false;
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
