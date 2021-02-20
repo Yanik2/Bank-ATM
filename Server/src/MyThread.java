@@ -33,8 +33,7 @@ public class MyThread extends Thread{
                 sendResponse("Access denied");
                 continue;
             }
-            String[] reqArr = checkedRequest.split("#");
-            String response = makeResponse(reqArr[0], reqArr[1], reqArr[2], reqArr[3]);
+            String response = makeResponse(checkedRequest);
             if(response.equals("user quits")) {
                 db.updateDatabase();
                 break;
@@ -55,39 +54,33 @@ public class MyThread extends Thread{
 
     private String checkLoginAndGetId(String request) {
         if(request.startsWith("login")) {
-            int index = request.indexOf("#");
-            String loginRequest = request.substring(index + 1);
-            if (loginsAndPasswords.containsValue(loginRequest))
-                for (String key : loginsAndPasswords.keySet()) {
-                    if (loginsAndPasswords.get(key).equals(loginRequest))
-                        return key + "#0" + "#null" + "#null";
-                }
-            return "-1";
+            return getId(request);
         }
         return request;
     }
 
-    private String makeResponse(String id, String request, String amount, String destinationId) {
+    private String makeResponse(String request) {
+        Request reqObj = new Request(request);
         String response = "";
-        switch(request) {
+        switch(reqObj.option) {
             case "0":
-                response = id + "#" + db.getValue(id);
+                response = reqObj.id + "#" + db.getValue(reqObj.id);
                 break;
             case "1":
-                response =  db.getValue(id);
+                response =  db.getValue(reqObj.id);
                 break;
             case "2":
-                response = changeBalance(id, amount, false);
+                response = changeBalance(reqObj.id, reqObj.amount, false);
                 break;
             case "3":
-                response = changeBalance(id, amount, true);
+                response = changeBalance(reqObj.id, reqObj.amount, true);
                 break;
             case "4":
-                if(!db.checkForDestinationId(destinationId)) {
+                if(!db.checkForDestinationId(reqObj.destinationId)) {
                     response = "There is no user with that id";
                     break;
                 }
-                response = transferMoney(id, amount, destinationId);
+                response = transferMoney(reqObj.id, reqObj.amount, reqObj.destinationId);
                 break;
             case "5":
                 response = downService();
@@ -124,6 +117,16 @@ public class MyThread extends Thread{
         return result;
     }
 
+    private String getId(String request) {
+        int index = request.indexOf("#");
+        String loginRequest = request.substring(index + 1);
+        if (loginsAndPasswords.containsValue(loginRequest))
+            for (String key : loginsAndPasswords.keySet()) {
+                if (loginsAndPasswords.get(key).equals(loginRequest))
+                    return key + "#0" + "#null" + "#null";
+            }
+        return "-1";
+    }
     private String downService() {
         try {
             if(!client.isClosed()) {
